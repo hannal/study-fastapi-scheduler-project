@@ -11,4 +11,6 @@ filterwarnings = "error"
 addopts = '''
   --strict-markers
   --asyncio-mode=auto
+  --doctest-modules
 '''
+doctest_optionflags = 'NORMALIZE_WHITESPACE IGNORE_EXCEPTION_DETAIL'
