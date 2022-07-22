@@ -43,6 +43,13 @@ class CandidateRepository:
         fake_db['events'][event.id]['candidates'].append(candidate)
         return candidate
 
+    @classmethod
+    def get_candidate(cls, candidate_id: int) -> Candidate:
+        if candidate := fake_db['candidate'].get(candidate_id):
+            return Event(**candidate)
+        raise ObjectNotExistError
+
+
 
 fake_db = {
     'users': {

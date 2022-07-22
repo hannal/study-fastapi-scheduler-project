@@ -2,9 +2,10 @@ from fastapi import APIRouter, Body, Depends
 from fastapi import status
 from fastapi.exceptions import HTTPException
 
+import services.attendee
 from services.candidate import service_create_candidate
 from repositories import ObjectNotExistError, UserRepository, EventRepository, CandidateRepository, fake_db
-from schemas import User, Event, CandidatePayload, CandidateVotePayload
+from schemas import User, Event, CandidatePayload, CandidateVotePayload, Candidate
 
 router = APIRouter()
 
@@ -14,6 +15,19 @@ def use_user():
         return UserRepository.get_user(user_id=1)
     except ObjectNotExistError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+
+def use_candidate_ids(candidate_ids):
+    if not candidate_ids:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    candidates = []
+    try:
+        for candidate_id in candidate_ids:
+            candidates.append(CandidateRepository.get_candidate(candidate_id=candidate_id))
+    except ObjectNotExistError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    return candidates
 
 
 def use_event(event_id: str) -> Event:
@@ -48,11 +62,11 @@ def list_candidates(event: Event = Depends(use_event)):
 
 @router.post('/{event_id}/candidates/vote/')
 def vote_candidate(
-        event_id: int,
-        candidate_ids: CandidateVotePayload = Body(...),
+        event: Event = Depends(use_event),
+        candidates: list[Candidate] = Depends(use_candidate_ids),
         user: User = Depends(use_user)
 ):
-    for candidate_id in candidate_ids:
-        fake_db['attendance'][event_id][candidate_id].append(user.id)
+    for candidate in candidates:
+        services.attendee.vote_candidate(user, event, candidate)
 
     return {}
