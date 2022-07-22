@@ -31,7 +31,7 @@ class EventRepository:
         event = cls.get_event(event_id)
         event.attendances.append(Attendance(user=user, candidate=candidate))
         fake_db['events'][event.id] = event.dict()
-        return Event(**event)
+        return event
 
 
 class CandidateRepository:

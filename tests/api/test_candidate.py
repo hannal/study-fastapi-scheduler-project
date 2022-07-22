@@ -6,7 +6,7 @@ from services.candidate import EventRepository, CandidateRepository, service_cre
 
 def test_create_candidate(client):
     user = User(id=1)
-    event = Event(host=user, id=1, candidates=[])
+    event = Event(host=user, id=1, candidates=[], attendances=[])
 
     response = client.get('/1/candidate')
     assert response.status_code == 404

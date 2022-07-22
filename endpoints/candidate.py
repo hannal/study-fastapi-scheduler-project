@@ -69,4 +69,4 @@ def vote_candidate(
     for candidate in candidates:
         services.attendee.vote_candidate(user, event, candidate)
 
-    return {}
+    return EventRepository.get_event(event.id)
