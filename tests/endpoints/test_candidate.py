@@ -1,7 +1,8 @@
 import datetime
 
-from services.candidate import EventRepository, CandidateRepository, service_create_candidate, User, Event, \
-    CandidatePayload
+from services.candidate import service_create_candidate
+from repositories import EventRepository, CandidateRepository
+from schemas import User, Event, CandidatePayload
 
 
 def test_service_create_candidate():

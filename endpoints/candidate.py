@@ -2,8 +2,9 @@ from fastapi import APIRouter, Body, Depends
 from fastapi import status
 from fastapi.exceptions import HTTPException
 
-from services.candidate import Event, UserRepository, ObjectNotExistError, EventRepository, CandidatePayload, User, \
-    service_create_candidate, CandidateRepository, fake_db, CandidateVotePayload
+from services.candidate import service_create_candidate
+from repositories import ObjectNotExistError, UserRepository, EventRepository, CandidateRepository, fake_db
+from schemas import User, Event, CandidatePayload, CandidateVotePayload
 
 router = APIRouter()
 
