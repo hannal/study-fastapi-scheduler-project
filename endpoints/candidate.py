@@ -30,7 +30,7 @@ def use_candidate_ids(candidate_ids):
     return candidates
 
 
-def use_event(event_id: str) -> Event:
+def use_event(event_id: int) -> Event:
     try:
         return EventRepository.get_event(event_id=event_id)
     except ObjectNotExistError:

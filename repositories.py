@@ -18,6 +18,12 @@ class UserRepository:
             return User(**user)
         raise ObjectNotExistError
 
+    @classmethod
+    def create_user(cls, user_id) -> User:
+        user = User(id=user_id)
+        fake_db['users'][user_id] = user.dict()
+        return user
+
 
 class EventRepository:
     @classmethod
@@ -50,11 +56,8 @@ class CandidateRepository:
         raise ObjectNotExistError
 
 
-
 fake_db = {
-    'users': {
-        1: User(id=1),
-    },
+    'users': defaultdict(dict),
     'events': defaultdict(dict),
     'candidate': defaultdict(dict),
     'attendance': defaultdict(dict),
