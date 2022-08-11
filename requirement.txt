@@ -2,3 +2,5 @@ fastapi[all]>=0.78.0; python_full_version >= "3.10.0"
 pytest>=7.0
 pytest-asyncio>=0.18.3
 black==22.6.0
+SQLAlchemy
+aiosqlite

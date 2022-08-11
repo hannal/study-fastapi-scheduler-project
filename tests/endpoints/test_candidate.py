@@ -1,8 +1,11 @@
 import datetime
 
+from fastapi import Depends
 from services.candidate import service_create_candidate
 from repositories import EventRepository, CandidateRepository
 from schemas import User, Event, CandidatePayload
+from ...db import use_db, Session, op
+from ...models import Candidate
 
 
 def test_service_create_candidate():

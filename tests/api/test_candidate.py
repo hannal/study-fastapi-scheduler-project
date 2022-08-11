@@ -1,20 +1,36 @@
 import datetime
+from unittest.mock import MagicMock
 
-from services.candidate import EventRepository, CandidateRepository, service_create_candidate, User, Event, \
-    CandidatePayload
+from services import candidate
+from services.candidate import service_create_candidate
+from repositories import EventRepository, CandidateRepository
+from schemas import User, Event, CandidatePayload
 
 
-def test_create_candidate(client):
+def test_create_candidate(client, monkeypatch):
     user = User(id=1)
     event = Event(host=user, id=1, candidates=[], attendances=[])
 
-    response = client.get('/1/candidate')
+    class MockEventRepository:
+        @classmethod
+        def get_event(cls, *args, **kwargs):
+            return event
+
+    url = f'/{event.id}/candidate'
+    response = client.get(url)
     assert response.status_code == 404
 
-    params = {'when': '2022-07-15T12:25:00Z'}
-    response = client.post('/1/candidate', json=params)
-    assert response.status_code == 200
-    assert response.json()['when'] == '2022-07-15T12:25:00Z'
+    mock = MagicMock()
+    mock.return_value = MockEventRepository
+
+    with monkeypatch.context() as m:
+        m.setattr(candidate, "EventRepository", mock)
+        when = datetime.datetime.now()
+        expected = when.isoformat()
+        params = {'when': expected}
+        response = client.post(url, json=params)
+        assert response.status_code == 200
+        assert response.json()['when'] == expected
 
     # user = User(id=1)
     # event = Event(host=user, id=1, candidates=[])

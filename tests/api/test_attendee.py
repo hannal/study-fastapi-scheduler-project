@@ -24,6 +24,3 @@ def test_vote_create_endpoint(host, user, candidate):
     event = Event(id=1, host=host, candidates=[candidate], attendances=[])
     fake_db["candidate"][1] = candidate.dict()
     fake_db["events"][1] = event.dict()
-
-    class MockAttendeeRepository:
-        @classmethod

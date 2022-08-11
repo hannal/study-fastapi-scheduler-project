@@ -40,5 +40,5 @@ def host() -> User:
 
 @pytest.fixture
 def candidate() -> Candidate:
-    CandidateRepository.create()
+    # CandidateRepository.create()
     return Candidate(id=1, when=datetime.now())

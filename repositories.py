@@ -1,6 +1,9 @@
+import datetime
 from collections import defaultdict
 
-from schemas import User, Event, CandidatePayload, Candidate, Attendance
+import models
+import schemas
+from db import AsyncSession as Session, use_db, op
 
 
 class BaseError(Exception):
@@ -11,49 +14,98 @@ class ObjectNotExistError(BaseError):
     pass
 
 
+class DuplicatedUserError(BaseError):
+    pass
+
+
 class UserRepository:
     @classmethod
-    def get_user(cls, user_id: int) -> User:
-        if user := fake_db['users'].get(user_id):
-            return User(**user)
-        raise ObjectNotExistError
+    async def get_user(cls, user_id: int) -> schemas.User:
+        session: Session = use_db()
+
+        stmt = op.select(models.User).where(models.User.id == user_id)
+
+        result = await session.execute(stmt)
+        try:
+            user = result.scalar_one()
+            return schemas.User.from_orm(**user.dict())
+        except Exception as exc:
+            raise ObjectNotExistError() from exc
 
     @classmethod
-    def create_user(cls, user_id) -> User:
-        user = User(id=user_id)
-        fake_db['users'][user_id] = user.dict()
-        return user
+    async def create_user(cls, user: schemas.User) -> schemas.User:
+        session: Session = use_db()
+        new_user = models.User(**user.dict())
+
+        async with session.begin():
+            try:
+                session.add(new_user)
+                await session.commit()
+            except Exception as exc:
+                await session.rollback()
+                raise DuplicatedUserError()
+
+        return schemas.User.from_orm(new_user)
 
 
 class EventRepository:
     @classmethod
-    def get_event(cls, event_id: int) -> Event:
-        if event := fake_db['events'].get(event_id):
-            return Event(**event)
-        raise ObjectNotExistError
+    async def get_event(cls, event_id: int) -> schemas.Event:
+        session: Session = use_db()
+
+        stmt = op.select(models.Event).where(models.Event.id == event_id)
+
+        result = await session.execute(stmt)
+        try:
+            event = result.scalar_one()
+            return schemas.Event.from_orm(event)
+        except Exception as exc:
+            raise ObjectNotExistError() from exc
 
     @classmethod
-    def add_attendance(cls, event_id: int, user: User, candidate: Candidate) -> Event:
-        event = cls.get_event(event_id)
-        event.attendances.append(Attendance(user=user, candidate=candidate))
-        fake_db['events'][event.id] = event.dict()
-        return event
+    async def add_attendance(cls, event_id: int, user_id: int, candidate_id: int) -> schemas.Attendance:
+        session: Session = use_db()
+
+        new_attendance = models.Attendance(event_id=event_id, user_id=user_id, candidate_id=candidate_id)
+
+        async with session.begin():
+            try:
+                session.add(new_attendance)
+                await session.commit()
+            except Exception as exc:
+                await session.rollback()
+                raise DuplicatedUserError() from exc
+
+        return schemas.Attendance.from_orm(new_attendance)
 
 
 class CandidateRepository:
     @classmethod
-    def create(cls, event: Event, payload: CandidatePayload) -> Candidate:
-        candidate = Candidate(id=1, **payload.dict())
-        fake_db['candidate'][candidate.id] = candidate.dict()
-        fake_db['events'][event.id] = event.dict()
-        fake_db['events'][event.id]['candidates'].append(candidate)
-        return candidate
+    def create(cls, event_id: int, when: datetime.datetime) -> schemas.Candidate:
+        session: Session = use_db()
+        new_candidate = models.Candidate(event_id=event_id, when=when)
+
+        async with session.begin():
+            try:
+                session.add(new_candidate)
+                await session.commit()
+            except Exception as exc:
+                await session.rollback()
+                raise DuplicatedUserError()
+
+        return schemas.Candidate.from_orm(new_candidate)
 
     @classmethod
-    def get_candidate(cls, candidate_id: int) -> Candidate:
-        if candidate := fake_db['candidate'].get(candidate_id):
-            return Event(**candidate)
-        raise ObjectNotExistError
+    async def get_candidate(cls, candidate_id: int) -> schemas.Candidate:
+        session: Session = use_db()
+        stmt = op.select(models.Candidate).where(models.Candidate.id == candidate_id)
+
+        result = await session.execute(stmt)
+        try:
+            candidate = result.scalar_one()
+            return schemas.Candidate.from_orm(**candidate.dict())
+        except Exception as exc:
+            raise ObjectNotExistError() from exc
 
 
 fake_db = {
